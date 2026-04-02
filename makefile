@@ -1,32 +1,31 @@
 CXX = g++
 CXXFLAGS = -Wall -std=c++17
 
-EXEC = main
+SRC = src/main.cpp
+EXEC = build/main
+
 DEB_NAME = bubblesort
 DEB_VERSION = 1.0
 DEB_DIR = deb_package
 
 all: $(EXEC)
 
-$(EXEC): main.cpp
-	$(CXX) $(CXXFLAGS) main.cpp -o $(EXEC)
+$(EXEC): $(SRC)
+	mkdir -p build
+	$(CXX) $(CXXFLAGS) $(SRC) -o $(EXEC)
 
 deb: $(EXEC)
 	@echo "Очистка старого пакета..."
 	rm -rf $(DEB_DIR)
-👉 В итоге будет так:
-deb: $(EXEC)
-	@echo "Очистка старого пакета..."
-	rm -rf $(DEB_DIR)
 
-	@echo "Создание структуры пакета..."
+	@echo "Создание структуры..."
 	mkdir -p $(DEB_DIR)/DEBIAN
 	mkdir -p $(DEB_DIR)/usr/bin
 
 	@echo "Копирование бинарника..."
-	cp $(EXEC) $(DEB_DIR)/usr/bin/$(DEB_NAME)
+	install -m 755 $(EXEC) $(DEB_DIR)/usr/bin/$(DEB_NAME)
 
-	@echo "Создание control файла..."
+	@echo "Создание control..."
 	echo "Package: $(DEB_NAME)" > $(DEB_DIR)/DEBIAN/control
 	echo "Version: $(DEB_VERSION)" >> $(DEB_DIR)/DEBIAN/control
 	echo "Section: base" >> $(DEB_DIR)/DEBIAN/control
@@ -39,15 +38,19 @@ deb: $(EXEC)
 	chmod 755 $(DEB_DIR)/DEBIAN
 	chmod 644 $(DEB_DIR)/DEBIAN/control
 
-	@echo "Сборка deb..."
+	@echo "Сборка пакета..."
 	dpkg-deb --build $(DEB_DIR)
 
 	@echo "Готово: $(DEB_DIR).deb"
-	
+
+clean_deb:
+	rm -rf $(DEB_DIR)
+	rm -f $(DEB_DIR).deb
+
 run: $(EXEC)
 	./$(EXEC)
 
 clean:
-	rm -f $(EXEC)
+	rm -rf build
 
-.PHONY: all clean run deb
+.PHONY: all clean run deb clean_deb
