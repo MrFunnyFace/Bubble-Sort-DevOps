@@ -3,10 +3,6 @@
 #include <ctime>
 #include <string>
 
-#ifdef __linux__
-#include <unistd.h>
-#endif
-
 using namespace std;
 
 class BubleSort
@@ -76,20 +72,19 @@ void wait(){
     if (line.empty()) {}
 }
 
-int main(){
+int main(int argc, char* argv[]) {
+
+    if (argc > 1) {
+        BubleSort b;
+        b.sort_mas(0);
+        b.prtint_mas();
+        return 0;
+    }
+
     BubleSort buble;
     buble.prtint_mas();
     unsigned int choice;
     bool is_run = true;
-    
-#ifdef __linux__
-    if (!isatty(STDIN_FILENO)) {
-        buble.sort_mas(0);
-        buble.prtint_mas();
-        return 0;
-    }
-#endif
-
 
     while (is_run == true)
     {
