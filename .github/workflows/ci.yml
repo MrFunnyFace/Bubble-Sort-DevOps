@@ -24,7 +24,7 @@ jobs:
       run: |
         chmod +x build/main
         chmod +x cicd/test.sh
-        
+
     - name: Test
       run: ./cicd/test.sh
 
@@ -36,3 +36,22 @@ jobs:
       with:
         name: bubblesort
         path: deb_package.deb
+        
+  deploy:
+    runs-on: ubuntu-latest
+    needs: pipeline
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Download DEB
+      uses: actions/download-artifact@v4
+      with:
+        name: bubblesort
+
+    - name: Build Docker image
+      run: docker build -t bubblesort .
+
+    - name: Run container
+      run: docker run bubblesort

@@ -3,6 +3,10 @@
 #include <ctime>
 #include <string>
 
+#ifdef __linux__
+#include <unistd.h>
+#endif
+
 using namespace std;
 
 class BubleSort
@@ -77,6 +81,16 @@ int main(){
     buble.prtint_mas();
     unsigned int choice;
     bool is_run = true;
+    
+#ifdef __linux__
+    if (!isatty(STDIN_FILENO)) {
+        buble.sort_mas(0);
+        buble.prtint_mas();
+        return 0;
+    }
+#endif
+
+
     while (is_run == true)
     {
         // system("clear");
