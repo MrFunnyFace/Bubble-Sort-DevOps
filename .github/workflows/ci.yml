@@ -20,6 +20,11 @@ jobs:
     - name: Build
       run: make
 
+    - name: Fix permissions
+      run: |
+        chmod +x build/main
+        chmod +x cicd/test.sh
+        
     - name: Test
       run: ./cicd/test.sh
 
