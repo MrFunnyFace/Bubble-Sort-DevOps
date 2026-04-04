@@ -53,4 +53,8 @@ run: $(EXEC)
 clean:
 	rm -rf build
 
-.PHONY: all clean run deb clean_deb
+docker_build: 
+	docker build -t bubblesort:latest .
+
+.PHONY: all clean run deb clean_deb docker_bulid
+

@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bubblesort-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: bubblesort
+  template:
+    metadata:
+      labels:
+        app: bubblesort
+    spec:
+      containers:
+      - name: bubblesort
+        image: bubblesort:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
