@@ -1,9 +1,6 @@
-FROM ubuntu:latest
+FROM ubuntu:latest 
 
-COPY *.deb /app/
+COPY build/main /app/bubblesort 
+RUN chmod +x /app/bubblesort 
 
-RUN apt update && \
-    apt install -y dpkg && \
-    dpkg -i /app/*.deb || apt install -f -y
-
-CMD ["bubblesort","auto"]
+CMD ["/app/bubblesort"]

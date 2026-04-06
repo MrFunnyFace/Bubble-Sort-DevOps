@@ -16,5 +16,7 @@ spec:
       - name: bubblesort
         image: bubblesort:latest
         imagePullPolicy: IfNotPresent
+        command: ["/bin/sh"]
+        args: ["-c", "while true; do /app/bubblesort; sleep 10; done"]
         ports:
-        - containerPort: 8080
+          - containerPort: 8080
