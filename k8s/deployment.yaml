@@ -16,13 +16,5 @@ spec:
       - name: bubblesort
         image: bubblesort:latest
         imagePullPolicy: IfNotPresent
-        command: ["/bin/sh"]
-        args:
-          - "-c"
-          - |
-            apt update && apt install -y netcat && \
-            while true; do
-              echo -e "HTTP/1.1 200 OK\nContent-Type: text/plain\n\n$(/app/bubblesort auto)" | nc -l -p 8080;
-            done
         ports:
           - containerPort: 8080
