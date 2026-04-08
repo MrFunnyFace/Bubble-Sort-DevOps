@@ -2,56 +2,129 @@ name: CI Pipeline
 
 on:
   push:
+    branches: [ "4PR" ]
+  pull_request:
     branches: [ "main" ]
 
 jobs:
-  pipeline:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y g++ dpkg-dev
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential cmake git libcurl4-openssl-dev
 
-    - name: Build
-      run: make
+      - name: Build prometheus-cpp
+        run: |
+          cd src/
+          gh repo clone jupp0r/prometheus-cpp
+          cd prometheus-cpp/
+          git submodule update --init --recursive
+          mkdir build && cd build
+          cmake .. \
+            -DBUILD_SHARED_LIBS=ON \
+            -DENABLE_PUSH=OFF \
+            -DENABLE_COMPRESSION=OFF \
+            -DENABLE_TESTING=OFF
+          make -j4
+          sudo make install
 
-    - name: Fix permissions
-      run: |
-        chmod +x build/main
-        chmod +x cicd/test.sh
-
-    - name: Test
-      run: ./cicd/test.sh
-
-    - name: Build DEB
-      run: make deb
-
-    - name: Upload DEB
-      uses: actions/upload-artifact@v4
-      with:
-        name: bubblesort
-        path: deb_package.deb
+      - name: Build project
+        run: make
         
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential cmake git libcurl4-openssl-dev curl
+
+      - name: Build prometheus-cpp
+        run: |
+          cd src/
+          gh repo clone jupp0r/prometheus-cpp
+          cd src/prometheus-cpp
+          git submodule update --init --recursive
+          mkdir build && cd build
+          cmake ..
+          make -j4
+          sudo make install
+
+      - name: Build app
+        run: make
+
+      - name: Run app in background
+        run: |
+          ./build/main &
+          sleep 2
+
+      - name: Test HTTP endpoint
+        run: |
+          curl -f http://localhost:8080
+
+      - name: Test metrics endpoint
+        run: |
+          curl -f http://localhost:9090
+
   deploy:
     runs-on: ubuntu-latest
-    needs: pipeline
+    needs: test
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Download DEB
-      uses: actions/download-artifact@v4
-      with:
-        name: bubblesort
+      - name: Install tools
+        run: |
+          sudo apt update
+          sudo apt install -y curl
 
-    - name: Build Docker image
-      run: docker build -t bubblesort .
+      - name: Install Minikube
+        run: |
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
 
-    - name: Run container
-      run: docker run bubblesort
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/stable.txt"
+          curl -LO "https://dl.k8s.io/release/$(cat stable.txt)/bin/linux/amd64/kubectl"
+          chmod +x kubectl
+          sudo mv kubectl /usr/local/bin/
+
+      - name: Install Helm
+        run: |
+          curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+
+      - name: Start Minikube
+        run: |
+          minikube start --driver=docker
+
+      - name: Build Docker image inside Minikube
+        run: |
+          eval $(minikube docker-env)
+          docker build -t bubblesort:latest .
+
+      - name: Deploy via Helm
+        run: |
+          helm install bubblesort bubblesort_k8s/
+
+      - name: Wait for pods
+        run: |
+          kubectl wait --for=condition=ready pod -l app=bubblesort --timeout=120s
+
+      - name: Test service via port-forward
+        run: |
+          kubectl port-forward svc/bubblesort 8080:80 &
+          sleep 5
+          curl -f http://localhost:8080

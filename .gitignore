@@ -1,4 +1,6 @@
 build/
+src/prometheus-cpp/build
+src/prometheus-cpp/
 
 deb_package/
 *.deb
