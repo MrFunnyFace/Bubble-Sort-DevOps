@@ -53,7 +53,7 @@ jobs:
       - name: Build prometheus-cpp
         run: |
           cd src/
-          gh repo clone jupp0r/prometheus-cpp
+          git clone jupp0r/prometheus-cpp
           cd src/prometheus-cpp
           git submodule update --init --recursive
           mkdir build && cd build
