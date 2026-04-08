@@ -16,7 +16,8 @@ $(EXEC): $(SRC)
 	$(CXX) $(CXXFLAGS) $(SRC) -o $(EXEC) \
 	-lprometheus-cpp-core \
 	-lprometheus-cpp-pull \
-	-lpthread
+	-lprometheus-cpp-util \
+	-lpthread \
 	-lz
 
 deb: $(EXEC)
