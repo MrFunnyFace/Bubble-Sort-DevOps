@@ -1,0 +1,16 @@
+replicaCount: 2
+
+image:
+  repository: bubblesort
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 8080
+  nodePort: 30080
+
+metrics:
+  port: 9090
+  targetPort: 9090
