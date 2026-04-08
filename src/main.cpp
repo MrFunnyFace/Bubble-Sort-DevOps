@@ -1,7 +1,15 @@
 #include <iostream>
 #include <random>
 #include <ctime>
-#include <string>
+#include <sstream>
+#include <memory>
+
+#include "httplib.h"
+
+// Prometheus
+#include <prometheus/registry.h>
+#include <prometheus/exposer.h>
+#include <prometheus/counter.h>
 
 using namespace std;
 
@@ -9,130 +17,90 @@ class BubleSort
 {
 public:
     BubleSort();
-    void prtint_mas();
+    string print_mas();
     void mix_mas();
     void sort_mas(int);
+
 private:
     int mas[100];
-
 };
 
 BubleSort::BubleSort(){
     srand(time(0));
-
     for (int i=0;i<100;i++){
-        BubleSort::mas[i]=rand()%100;
+        mas[i]=rand()%100;
     }
 }
 
-void BubleSort::prtint_mas(){
+string BubleSort::print_mas(){
+    stringstream ss;
     for (int i = 0; i < 100; i++) {
-        cout << mas[i] << " ";
-        if ((i + 1) % 10 == 0) cout << endl;
+        ss << mas[i] << " ";
+        if ((i + 1) % 10 == 0) ss << "\n";
     }
+    return ss.str();
 }
 
 void BubleSort::mix_mas(){
     for (int i = 99; i > 0; i--) {
-
         int j = rand() % (i + 1);
-
         int temp = mas[i];
         mas[i] = mas[j];
         mas[j] = temp;
     }
 }
 
-//big_to_small if flag = 1
 void BubleSort::sort_mas(int flag){
     for (int i = 0; i < 99; i++) {
         for (int j = 0; j < 99 - i; j++) {
             if (flag == 1) {
                 if (mas[j] < mas[j+1]) {
-                    int temp = mas[j];
-                    mas[j] = mas[j+1];
-                    mas[j+1] = temp;
+                    swap(mas[j], mas[j+1]);
                 }
             } else {
                 if (mas[j] > mas[j+1]) {
-                    int temp = mas[j];
-                    mas[j] = mas[j+1];
-                    mas[j+1] = temp;
+                    swap(mas[j], mas[j+1]);
                 }
             }
         }
     }
 }
 
-void wait(){
-    cout<<"Press \"enter\" to continue";
-    string line;
-    getline(cin, line);
-    getline(cin, line);
-    if (line.empty()) {}
-}
+int main() {
 
-int main(int argc, char* argv[]) {
+    // Prometheus
+    auto registry = std::make_shared<prometheus::Registry>();
 
-    if (argc > 1) {
+    auto& request_counter = prometheus::BuildCounter()
+        .Name("requests_total")
+        .Help("Total HTTP requests")
+        .Register(*registry)
+        .Add({});
+
+    auto& sort_counter = prometheus::BuildCounter()
+        .Name("sort_operations_total")
+        .Help("Total sort operations")
+        .Register(*registry)
+        .Add({});
+
+    prometheus::Exposer exposer{"0.0.0.0:9090"};
+    exposer.RegisterCollectable(registry);
+
+    // HTTP 
+    httplib::Server svr;
+
+    svr.Get("/", [&](const httplib::Request& req, httplib::Response& res) {
+        request_counter.Increment();
+        sort_counter.Increment();
+
         BubleSort b;
         b.sort_mas(0);
-        b.prtint_mas();
-        return 0;
-    }
 
-    BubleSort buble;
-    buble.prtint_mas();
-    unsigned int choice;
-    bool is_run = true;
+        res.set_content(b.print_mas(), "text/plain");
+    });
 
-    while (is_run == true)
-    {
-        // system("clear");
-        cout<<"Menu \n"<<endl;
-        cout<<"1) Print Mas"<<endl;
-        cout<<"2) Mix mas"<<endl;
-        cout<<"3) Sort mas >"<<endl;
-        cout<<"4) Sort mas <"<<endl;
-        cout<<"0) Exit"<<endl;
-        cout<<"Make choice:";
-        cin>>choice;
-        switch (choice)
-        {
-        case 0:
-            is_run=false;
-            break;
-        
-        case 1:
-            buble.prtint_mas();
-            wait();
-            break;
+    cout << "Server started on 8080\n";
+    cout << "Metrics on 9090\n";
 
-        case 2:
-            buble.mix_mas();
-            buble.prtint_mas();
-            wait();
-            break;
-
-        case 3:
-            buble.sort_mas(0);
-            buble.prtint_mas();
-            wait();
-            break;
-
-        case 4:
-            buble.sort_mas(1);
-            buble.prtint_mas();
-            wait();
-            break;
-
-        default:
-            cout<<"plese try again"<<endl;
-            wait();
-            break;
-        }
-    }
-    
-
-    return 0;
+    svr.listen("0.0.0.0", 8080);
 }

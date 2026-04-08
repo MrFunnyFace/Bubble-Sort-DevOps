@@ -11,8 +11,12 @@ DEB_DIR = deb_package
 all: $(EXEC)
 
 $(EXEC): $(SRC)
+	export LD_LIBRARY_PATH=/usr/local/lib
 	mkdir -p build
-	$(CXX) $(CXXFLAGS) $(SRC) -o $(EXEC)
+	$(CXX) $(CXXFLAGS) $(SRC) -o $(EXEC) \
+	-lprometheus-cpp-core \
+	-lprometheus-cpp-pull \
+	-lpthread
 
 deb: $(EXEC)
 	@echo "Очистка старого пакета..."
@@ -54,7 +58,16 @@ clean:
 	rm -rf build
 
 docker_build: 
+	eval $(minikube docker-env)
 	docker build -t bubblesort:latest .
 
-.PHONY: all clean run deb clean_deb docker_bulid
+docker_run:
+	docker run -p 8080:8080 -p 9090:9090 bubblesort:latest
 
+k8s_helm_install:
+	helm install bubblesort bubblesort_k8s/
+
+k8s_helm_uninstall:
+	helm uninstall bubblesort
+
+.PHONY: all clean run deb clean_deb docker_build docker_run k8s_helm_uninstall k8s_helm_install
