@@ -13,7 +13,7 @@ all: $(EXEC)
 $(EXEC): $(SRC) 
 	export LD_LIBRARY_PATH=/usr/local/lib 
 	mkdir -p build 
-	$(CXX) $(CXXFLAGS) $(SRC) -o $(EXEC) \ -lprometheus-cpp-core \ -lprometheus-cpp-pull \ -lpthread
+	$(CXX) $(CXXFLAGS) $(SRC) -o $(EXEC) -lprometheus-cpp-core -lprometheus-cpp-pull -lpthread
 
 deb: $(EXEC)
 	@echo "Очистка старого пакета..."
