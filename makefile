@@ -17,6 +17,7 @@ $(EXEC): $(SRC)
 	-lprometheus-cpp-core \
 	-lprometheus-cpp-pull \
 	-lpthread
+	-lz
 
 deb: $(EXEC)
 	@echo "Очистка старого пакета..."
