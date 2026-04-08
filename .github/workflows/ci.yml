@@ -54,8 +54,8 @@ jobs:
       - name: Build prometheus-cpp
         run: |
           cd src/prometheus-cpp
-          git submodule update --init --recursive
           mkdir build && cd build
+          git submodule update --init --recursive
           cmake .. \
             -DBUILD_SHARED_LIBS=ON \
             -DENABLE_PUSH=OFF \
