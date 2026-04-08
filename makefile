@@ -10,14 +10,10 @@ DEB_DIR = deb_package
 
 all: $(EXEC)
 
-$(EXEC): $(SRC)
-	export LD_LIBRARY_PATH=/usr/local/lib
-	mkdir -p build
-	$(CXX) $(CXXFLAGS) $(SRC) -o $(EXEC) \
-		-lprometheus-cpp-pull \
-		-lprometheus-cpp-core \		
-		-lpthread \
-		-lz
+$(EXEC): $(SRC) 
+	export LD_LIBRARY_PATH=/usr/local/lib 
+	mkdir -p build 
+	$(CXX) $(CXXFLAGS) $(SRC) -o $(EXEC) \ -lprometheus-cpp-core \ -lprometheus-cpp-pull \ -lpthread
 
 deb: $(EXEC)
 	@echo "Очистка старого пакета..."
