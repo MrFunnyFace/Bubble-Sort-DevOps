@@ -3,3 +3,4 @@ src/prometheus-cpp/build
 
 deb_package/
 *.deb
+.cfg
